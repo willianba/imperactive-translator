@@ -39,9 +39,17 @@ public class TranslationService {
     TranslateTextResult translationResult = translateClient.translateText(request);
 
     TranslatedFile translatedFile = new TranslatedFile();
-    translatedFile.setFileName(file.getName());
+    translatedFile.setFileName(generateFileName(file.getName(), file.getTargetLanguage()));
     translatedFile.setContent(translationResult.getTranslatedText());
 
     return translatedFile;
+  }
+
+  private String generateFileName(String fileName, String targetLanguage) {
+    StringBuilder sb = new StringBuilder();
+    return sb.append(targetLanguage)
+      .append("_")
+      .append(fileName)
+      .toString();
   }
 }
