@@ -1,5 +1,6 @@
 package com.tcc.translator.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,7 +48,9 @@ public class TranslationService {
 
   private String generateFileName(String fileName, String targetLanguage) {
     StringBuilder sb = new StringBuilder();
-    return sb.append(targetLanguage)
+    return sb.append(LocalDateTime.now().hashCode())
+      .append("_")
+      .append(targetLanguage)
       .append("_")
       .append(fileName)
       .toString();
