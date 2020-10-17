@@ -1,7 +1,5 @@
 package com.tcc.translator.rabbitmq.publisher;
 
-import java.util.List;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tcc.translator.dto.TranslatedFile;
@@ -33,9 +31,9 @@ public class LoaderPublisher {
   @Value("${translated.routing.key}")
   private String translatedRoutingKey;
 
-  public void sendTranslatedFiles(List<TranslatedFile> files) {
+  public void sendTranslatedFile(TranslatedFile file) {
     try {
-      String jsonMessage = mapper.writeValueAsString(files);
+      String jsonMessage = mapper.writeValueAsString(file);
       Message message = MessageBuilder.withBody(jsonMessage.getBytes())
         .setContentType(MessageProperties.CONTENT_TYPE_JSON).build();
       amqpTemplate.send(directExchange, translatedRoutingKey, message);

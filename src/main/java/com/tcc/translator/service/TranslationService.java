@@ -6,7 +6,8 @@ import java.util.stream.Collectors;
 
 import com.amazonaws.services.translate.AmazonTranslate;
 import com.amazonaws.services.translate.model.TranslateTextRequest;
-import com.amazonaws.services.translate.model.TranslateTextResult;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import com.tcc.translator.dto.GitHubContentForTranslation;
 import com.tcc.translator.dto.TranslatedFile;
 
@@ -23,27 +24,34 @@ public class TranslationService {
   @Autowired
   private AmazonTranslate translateClient;
 
-  public List<TranslatedFile> translateFile(List<GitHubContentForTranslation> files) {
+  public TranslatedFile translateFile(GitHubContentForTranslation file) {
     logger.info("Translating files with AWS Translate");
-
-    return files.stream()
-      .map(this::translateWithAws)
-      .collect(Collectors.toList());
+    return translateWithAws(file);
   }
 
   private TranslatedFile translateWithAws(GitHubContentForTranslation file) {
-    TranslateTextRequest request = new TranslateTextRequest()
-      .withText(file.getContent())
-      .withSourceLanguageCode(file.getSourceLanguage())
-      .withTargetLanguageCode(file.getTargetLanguage());
+    List<String> chunks = splitContentIntoChunks(file.getContent());
 
-    TranslateTextResult translationResult = translateClient.translateText(request);
+    String translatedText = chunks.stream()
+      .map(chunk -> {
+        TranslateTextRequest request = new TranslateTextRequest()
+          .withText(chunk)
+          .withSourceLanguageCode(file.getSourceLanguage())
+          .withTargetLanguageCode(file.getTargetLanguage());
+        return request;
+      })
+      .map(request -> translateClient.translateText(request).getTranslatedText())
+      .collect(Collectors.joining());
 
     TranslatedFile translatedFile = new TranslatedFile();
     translatedFile.setFileName(generateFileName(file.getName(), file.getTargetLanguage()));
-    translatedFile.setContent(translationResult.getTranslatedText());
+    translatedFile.setContent(translatedText);
 
     return translatedFile;
+  }
+
+  private List<String> splitContentIntoChunks(String fileContent) {
+    return Lists.newArrayList(Splitter.fixedLength(4859).split(fileContent));
   }
 
   private String generateFileName(String fileName, String targetLanguage) {
